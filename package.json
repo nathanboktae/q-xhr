@@ -1,0 +1,36 @@
+{
+  "name": "q-xhr",
+  "version": "0.1.0",
+  "description": "XMLHttpRequest (ajax) using powerful Q promises",
+  "author": "Nathan Black <nathan@nathanblack.org>",
+  "main": "q-xhr.js",
+  "scripts": {
+    "test": "mocha --compilers coffee:coffee-script"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nathanboktae/q-xhr.git"
+  },
+  "bugs": {
+    "url": "https://github.com/nathanboktae/q-xhr/issues"
+  },
+  "keywords": [
+    "q",
+    "xhr",
+    "ajax",
+    "promise",
+    "promises",
+    "deferred",
+    "xmlhttprequest"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "q": "latest",
+    "mocha": ">= 1.14.x < 2",
+    "chai": ">= 1.8.1 < 2",
+    "chai-as-promised": ">= 4.1.0",
+    "sinon": ">= 1.7.3 < 2",
+    "sinon-chai": ">= 2.5.0",
+    "coffee-script": ">= 1.6.3 < 2"
+  }
+}

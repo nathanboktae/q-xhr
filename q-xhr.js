@@ -4,6 +4,9 @@
     define(['Q'], function(Q) {
       return factory(XMLHttpRequest, Q)
     })
+  } else if (typeof exports === 'object' && typeof module === 'object') {
+    // CommonJS, mainly for testing
+    module.exports = factory
   } else {
     if (typeof Q !== 'undefined') {
       factory(XMLHttpRequest, Q)
@@ -13,7 +16,7 @@
   // shallow extend with varargs
   function extend(dst) {
     Array.prototype.forEach.call(arguments, function(obj) {
-      if (obj !== dst) {
+      if (obj && obj !== dst) {
         Object.keys(obj).forEach(function(key) {
           dst[key] = obj[key]
         })
@@ -114,43 +117,11 @@
   }
 
   Q.xhr = function (requestConfig) {
-    var defaults = this.defaults,
+    var defaults = Q.xhr.defaults,
     config = {
       transformRequest: defaults.transformRequest,
       transformResponse: defaults.transformResponse
     },
-    headers = mergeHeaders(requestConfig)
-
-    extend(config, requestConfig)
-    config.headers = headers
-    config.method = (config.method || 'GET').toUpperCase()
-
-    var serverRequest = function(config) {
-      headers = config.headers
-      var reqData = transformData(config.data, headersGetter(headers), config.transformRequest)
-
-      // strip content-type if data is undefined TODO does it really matter?
-      if (config.data == null) {
-        forEach(headers, function(value, header) {
-          if (lowercase(header) === 'content-type') {
-              delete headers[header]
-          }
-        })
-      }
-
-      if (config.withCredentials == null && defaults.withCredentials != null) {
-        config.withCredentials = defaults.withCredentials
-      }
-
-      // send request
-      return sendReq(config, reqData, headers).then(transformResponse, transformResponse)
-    },
-
-    transformResponse = function(response) {
-      response.data = transformData(response.data, response.headers, config.transformResponse)
-      return isSuccess(response.status) ? response : Q.reject(response)
-    },
-
     mergeHeaders = function(config) {
       var defHeaders = defaults.headers,
           reqHeaders = extend({}, config.headers),
@@ -191,12 +162,42 @@
 
       return reqHeaders;
     },
+    headers = mergeHeaders(requestConfig)
+
+    extend(config, requestConfig)
+    config.headers = headers
+    config.method = (config.method || 'GET').toUpperCase()
+
+    var serverRequest = function(config) {
+      headers = config.headers
+      var reqData = transformData(config.data, headersGetter(headers), config.transformRequest)
+
+      // strip content-type if data is undefined TODO does it really matter?
+      if (config.data == null) {
+        forEach(headers, function(value, header) {
+          if (lowercase(header) === 'content-type') {
+              delete headers[header]
+          }
+        })
+      }
+
+      if (config.withCredentials == null && defaults.withCredentials != null) {
+        config.withCredentials = defaults.withCredentials
+      }
+
+      // send request
+      return sendReq(config, reqData, headers).then(transformResponse, transformResponse)
+    },
+
+    transformResponse = function(response) {
+      response.data = transformData(response.data, response.headers, config.transformResponse)
+      return isSuccess(response.status) ? response : Q.reject(response)
+    },
 
     chain = [serverRequest, undefined],
     promise = Q.when(config)
 
-    // apply interceptors
-    this.interceptors.forEach(function(interceptor) {
+    Q.xhr.interceptors.forEach(function(interceptor) {
       if (interceptor.request || interceptor.requestError) {
         chain.unshift(interceptor.request, interceptor.requestError)
       }
@@ -261,9 +262,6 @@
 
     Q.xhr.pendingRequests.push(config)
 
-    // $httpBackend(config.method, url, reqData, done, reqHeaders, config.timeout, config.withCredentials, config.responseType)
-    // function(method, url, post, callback, headers, timeout, withCredentials, responseType)
-
     xhr.open(config.method, url, true)
     forEach(config.headers, function(value, key) {
       if (value) {
@@ -281,12 +279,6 @@
           response = xhr.responseType ? xhr.response : xhr.responseText
         }
 
-        // completeRequest(callback,
-        //     status || xhr.status,
-        //     response,
-        //     responseHeaders);
-        // completeRequest(callback, status, response, headersString) 
-
         // cancel timeout and subsequent timeout promise resolution
         timeoutId && clearTimeout(timeoutId)
         xhr = null
@@ -300,6 +292,7 @@
         ;(isSuccess(status) ? deferred.resolve : deferred.reject)({
           data: response,
           status: status,
+          // TODO: getter or just the object?
           headers: headersGetter(responseHeaders),
           config: config
         })
@@ -326,4 +319,5 @@
     return promise
   }
 
+  return Q
 })
