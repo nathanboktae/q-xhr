@@ -27,10 +27,11 @@
   "devDependencies": {
     "q": "latest",
     "mocha": ">= 1.14.x < 2",
+    "mocha-as-promised": "2.x.x",
     "chai": ">= 1.8.1 < 2",
     "chai-as-promised": ">= 4.1.0",
     "sinon": ">= 1.7.3 < 2",
-    "sinon-chai": ">= 2.5.0",
+    "sinon-chai": ">= 2.5.0 < 3",
     "coffee-script": ">= 1.6.3 < 2"
   }
 }

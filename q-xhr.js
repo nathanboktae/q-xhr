@@ -281,6 +281,7 @@
 
         // cancel timeout and subsequent timeout promise resolution
         timeoutId && clearTimeout(timeoutId)
+        status = status || xhr.status
         xhr = null
 
         // normalize status, including accounting for IE bug (http://bugs.jquery.com/ticket/1450)

@@ -1,6 +1,8 @@
+require('mocha-as-promised')()
+
 describe 'q-xhr', ->
-  Q = require 'Q'
   sinon = require 'sinon'
+  Q = require 'Q'
   chai = require 'chai'
   chai.should()
   chai.use require 'sinon-chai'
@@ -12,54 +14,153 @@ describe 'q-xhr', ->
     @send = sinon.spy()
     @abort = sinon.spy()
     @setRequestHeader = sinon.spy()
-    @getAllRequestHeaders = sinon.spy -> @headers
+    @getAllResponseHeaders = sinon.spy -> @headers
     xhr = this
 
-  beforeEach ->    
+  scenario = (opts) ->
+    Q.delay(1).then ->
+      opts.inFlight?()
+      xhr.readyState = 4
+      xhr.onreadystatechange()
+      opts.afterComplete?()
+
+  beforeEach ->
     qXhr XHR, Q
 
   it 'should register itself as an AMD module if an AMD loader is present'
 
-  it 'should do basic request', (done) ->
+  it 'should do basic request', ->
     Q.xhr
       url: '/foo',
       method: 'GET'
 
-    setTimeout ->
-      xhr.readystate = 4
-      xhr.onreadystatechange()
+    scenario
+      inFlight: ->
+        xhr.send.should.have.been.called
+      afterComplete: ->
+        xhr.open.should.have.been.calledWith 'GET', '/foo', true
 
-      xhr.open.should.have.been.calledWith 'GET', '/foo', true
-      xhr.send.should.have.been.called
-      done()
-    , 5
-
-  xit 'should pass data if specified', (done) ->
+  it 'should pass data if specified', ->
     Q.xhr
       url: '/foo',
       method: 'POST',
       data: 'some-data'
 
-    setTimeout ->
-      xhr.send.should.have.been.calledWith 'some-data'
-      done()
-    , 5
+    scenario
+      afterComplete: ->
+        xhr.send.should.have.been.calledWith 'some-data'
 
+  it 'should by default not set withCredentials', ->
+    Q.xhr
+      url: 'http://bar.com/foo',
+      method: 'POST',
+      data: 'some-data',
 
-  it 'should pass timeout, withCredentials and responseType'
-  it 'should set responseType and return xhr.response'
-  it 'should set withCredentials'
-  it 'should use withCredentials from default'
+    scenario
+      inFlight: ->
+        xhr.should.not.have.property 'withCredentials'
+
+  it 'should set withCredentials from the config', ->
+    Q.xhr
+      url: 'http://bar.com/foo',
+      method: 'POST',
+      data: 'some-data',
+      withCredentials: true
+
+    scenario
+      inFlight: ->
+        xhr.withCredentials.should.be.true
+
+  it 'should use withCredentials from default', ->
+    Q.xhr.defaults.withCredentials = true
+    Q.xhr
+      url: 'http://bar.com/foo',
+      method: 'POST',
+      data: 'some-data',
+
+    scenario
+      inFlight: ->
+        xhr.withCredentials.should.be.true
 
   describe 'params', ->
-    it 'should do basic request with params and encode'
-    it 'should merge params if url contains some already'
-    it 'should jsonify objects in params map'
+    it 'should do basic request with params and encode', ->
+      Q.xhr
+        url: '/url',
+        params:
+          'a=': '?&',
+          b: 2
+
+      scenario
+        inFlight: ->
+          xhr.open.should.have.been.calledWith 'GET', '/url?a%3D=%3F%26&b=2'
+
+    it 'should merge params if url contains some already', ->
+      Q.xhr
+        url: '/url?c=3',
+        params:
+          a: 1,
+          b: 2
+
+      scenario
+        inFlight: ->
+          xhr.open.should.have.been.calledWith 'GET', '/url?c=3&a=1&b=2'
+
+    it 'should jsonify objects in params map', ->
+      Q.xhr
+        url: '/url',
+        params:
+          a: 1,
+          b:
+            c: 3
+
+      scenario
+        inFlight: ->
+          xhr.open.should.have.been.calledWith 'GET', '/url?a=1&b=%7B%22c%22%3A3%7D'
+
     it 'should expand arrays in params map'
 
   describe 'callbacks', ->
-    it 'should pass in the response object when a request is successful'
+    it 'should pass in the response object when a request is successful', ->
+      scenario
+        inFlight: ->
+          xhr.responseType = 'string'
+          xhr.response = 'hi!'
+          xhr.status = 200
+
+      Q.xhr(
+        url: '/foo',
+        method: 'GET'
+      ).then (resp) ->
+        resp.data.should.equal 'hi!'
+        resp.status.should.equal 200
+
     it 'should pass in the response object when a request failed'
+    it 'should pass in the response object when a request is successful', ->
+      scenario
+        inFlight: ->
+          xhr.responseType = 'string'
+          xhr.response = 'oops!'
+          xhr.status = 500
+
+      Q.xhr(
+        url: '/foo',
+        method: 'GET'
+      ).then null, (resp) ->
+        resp.data.should.equal 'oops!'
+        resp.status.should.equal 500
+
+    it 'should set the response from xhr.responseText if xhr.responseType isnt available', ->
+      scenario
+        inFlight: ->
+          xhr.responseText = 'hi!'
+          xhr.status = 200
+
+      Q.xhr(
+        url: '/foo',
+        method: 'GET'
+      ).then (resp) ->
+        resp.data.should.equal 'hi!'
+        resp.status.should.equal 200
 
   describe 'response headers', ->
     it 'should return single header'
