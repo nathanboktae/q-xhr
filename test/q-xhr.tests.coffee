@@ -134,8 +134,7 @@ describe 'q-xhr', ->
         resp.data.should.equal 'hi!'
         resp.status.should.equal 200
 
-    it 'should pass in the response object when a request failed'
-    it 'should pass in the response object when a request is successful', ->
+    it 'should pass in the response object when a request failed', ->
       scenario
         inFlight: ->
           xhr.responseType = 'string'
@@ -163,19 +162,96 @@ describe 'q-xhr', ->
         resp.status.should.equal 200
 
   describe 'response headers', ->
-    it 'should return single header'
-    it 'should return null when single header does not exist'
-    it 'should return all headers as object'
+    headersScenario = ->
+      scenario
+        inFlight: ->
+          xhr.responseText = 'data'
+          xhr.status = 200
+          xhr.getAllResponseHeaders = sinon.spy ->
+            'content-type': 'text/plain'
+            'content-length': '4'
+            'x-frame-options': 'nosniff'
+
+    it 'should return single header', ->
+      headersScenario()
+
+      Q.xhr(
+        url: '/foo',
+        method: 'GET'
+      ).then (resp) ->
+        xhr.getAllResponseHeaders.should.have.been.calledOnce
+        resp.headers('X-Frame-Options').should.equal 'nosniff'
+
+    it 'should return null when single header does not exist', ->
+      headersScenario()
+
+      Q.xhr(
+        url: '/foo',
+        method: 'GET'
+      ).then (resp) ->
+        (typeof resp.headers('etag')).should.equal 'undefined'
+
+    it 'should return all headers as object', ->
+      headersScenario()
+
+      Q.xhr(
+        url: '/foo',
+        method: 'GET'
+      ).then (resp) ->
+        resp.headers().should.deep.equal
+          'content-type': 'text/plain'
+          'content-length': '4'
+          'x-frame-options': 'nosniff'
 
     describe 'parsing', ->
-      it 'should parse basic'
-      it 'should parse lines without space after colon'
-      it 'should trim the values'
-      it 'should allow headers without value'
-      it 'should merge headers with same key'
-      it 'should normalize keys to lower case'
-      it 'should parse CRLF as delimiter'
-      it 'should parse tab after semi-colon'
+      parseHeaders = (rawHeaders, expect) ->
+        scenario
+          inFlight: ->
+            xhr.status = 200
+            xhr.getAllResponseHeaders = -> rawHeaders
+
+        Q.xhr({ url: '/foo' }).then (resp) ->
+          expect resp.headers()
+
+      it 'should parse basic', ->
+        parseHeaders 'date: Thu, 04 Aug 2011 20:23:08 GMT\n' + 'content-encoding: gzip\n' + 'transfer-encoding: chunked\n' + 'x-cache-info: not cacheable; response has already expired, not cacheable; response has already expired\n' + 'connection: Keep-Alive\n' + 'x-backend-server: pm-dekiwiki03\n' + 'pragma: no-cache\n' + 'server: Apache\n' + 'x-frame-options: DENY\n' + 'content-type: text/html; charset=utf-8\n' + 'vary: Cookie, Accept-Encoding\n' + 'keep-alive: timeout=5, max=1000\n' + 'expires: Thu: , 19 Nov 1981 08:52:00 GMT\n'
+        , (headers) ->
+          headers['date'].should.equal 'Thu, 04 Aug 2011 20:23:08 GMT'
+          headers['content-encoding'].should.equal 'gzip'
+          headers['transfer-encoding'].should.equal 'chunked'
+          headers['keep-alive'].should.equal 'timeout=5, max=1000'
+
+      it 'should parse lines without space after colon', ->
+        parseHeaders 'key:value', (headers) ->
+          headers.key.should.equal 'value'
+
+      it 'should trim the values', ->
+        parseHeaders 'key:     value ', (headers) ->
+          headers.key.should.equal 'value'
+
+      it 'should allow headers without value', ->
+        parseHeaders 'key:', (headers) ->
+          headers.key.should.equal ''
+
+      it 'should merge headers with same key', ->
+        parseHeaders 'key: a\nkey:b\n', (headers) ->
+          headers.key.should.equal 'a, b'
+
+      it 'should normalize keys to lower case', ->
+        parseHeaders 'KeY: value', (headers) ->
+          headers.key.should.equal 'value'
+
+      it 'should parse CRLF as delimiter', ->
+        parseHeaders 'a: b\r\nc: d\r\n', (headers) ->
+          headers.should.deep.equal
+            a: 'b'
+            c: 'd'
+
+      it 'should parse tab after semi-colon', ->
+        parseHeaders 'a:\tb\nc: \td\n', (headers) ->
+          headers.should.deep.equal
+            a: 'b'
+            c: 'd'
 
   describe 'request headers', ->
     it 'should send custom headers'

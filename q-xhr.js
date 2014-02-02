@@ -1,4 +1,9 @@
 //jshint asi:true
+// Currently requires polyfills for
+// Array#forEach
+// Object.keys
+// String#trim
+
 (function(factory) {
   if (typeof define === 'function' && define.amd) {
     define(['Q'], function(Q) {
@@ -37,8 +42,8 @@
 
     headers.split('\n').forEach(function(line) {
       i = line.indexOf(':')
-      key = lowercase(line.substr(0, i))
-      val = line.substr(i + 1)
+      key = lowercase(line.substr(0, i).trim())
+      val = line.substr(i + 1).trim()
 
       if (key) {
         if (parsed[key]) {
@@ -59,7 +64,7 @@
       if (!headersObj) headersObj = parseHeaders(headers)
 
       if (name) {
-        return headersObj[lowercase(name)] || null;
+        return headersObj[lowercase(name)]
       }
 
       return headersObj
