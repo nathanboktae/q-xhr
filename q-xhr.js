@@ -325,5 +325,24 @@
     return promise
   }
 
+  ['get', 'delete', 'head'].forEach(function(name) {
+    Q.xhr[name] = function(url, config) {
+      return Q.xhr(extend(config || {}, {
+        method: name,
+        url: url
+      }))
+    }
+  });
+
+  ['post', 'put', 'patch'].forEach(function(name) {
+    Q.xhr[name] = function(url, data, config) {
+      return Q.xhr(extend(config || {}, {
+        method: name,
+        url: url,
+        data: data
+      }))
+    }
+  })
+
   return Q
 })
