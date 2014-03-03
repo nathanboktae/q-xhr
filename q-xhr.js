@@ -222,27 +222,21 @@
   }
 
 
-  var jsonStart = /^\s*(\[|\{[^\{])/,
-      jsonEnd = /[\}\]]\s*$/,
-      contentTypeJson = { 'Content-Type': 'application/json;charset=utf-8' }
+  var contentTypeJson = { 'Content-Type': 'application/json;charset=utf-8' }
 
   Q.xhr.defaults = {
-    // transform incoming response data
-    transformResponse: [function(data) {
-      // TODO: use Content-Type not regex tests
-      if (typeof data === 'string' && jsonStart.test(data) && jsonEnd.test(data)) {
+    transformResponse: [function(data, headers) {
+      if (typeof data === 'string' && (headers('content-type') || '').indexOf('json') >= 0) {
         data = JSON.parse(data)
       }
       return data
     }],
 
-    // transform outgoing request data
     transformRequest: [function(data) {
       return !!data && typeof data === 'object' && data.toString() !== '[object File]' ?
         JSON.stringify(data) : data
     }],
 
-    // default headers
     headers: {
       common: {
         'Accept': 'application/json, text/plain, */*'

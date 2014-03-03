@@ -2,7 +2,7 @@ require('mocha-as-promised')()
 
 describe 'q-xhr', ->
   sinon = require 'sinon'
-  Q = require 'Q'
+  Q = require 'q'
   chai = require 'chai'
   chai.should()
   chai.use require 'sinon-chai'
@@ -15,16 +15,24 @@ describe 'q-xhr', ->
     @abort = sinon.spy()
     @setRequestHeader = sinon.spy()
     @getAllResponseHeaders = sinon.spy -> @headers
+    throw new Error 'xhr not null' if xhr isnt null
     xhr = this
 
+  runScenario = (opts) ->
+    if xhr.testDone
+      return
+    opts.inFlight?()
+    xhr.readyState = 4
+    xhr.onreadystatechange()
+    opts.afterComplete?()
+    xhr.testDone = true
+    Q.xhr.pendingRequests[0]
+
   scenario = (opts) ->
-    Q.delay(1).then ->
-      opts.inFlight?()
-      xhr.readyState = 4
-      xhr.onreadystatechange()
-      opts.afterComplete?()
+    Q.delay(1).then -> if xhr? then runScenario opts else scenario opts
 
   beforeEach ->
+    xhr = null
     qXhr XHR, Q
 
   it 'should register itself as an AMD module if an AMD loader is present'
@@ -481,17 +489,73 @@ describe 'q-xhr', ->
 
     describe 'response', ->
       describe 'default', ->
-        it 'should deserialize json when Content-Type is json'
+        it 'should deserialize json when Content-Type is json', ->
+          scenario
+            inFlight: ->
+              xhr.responseText = '{"foo":"bar"}'
+              xhr.status = 200
+              xhr.getAllResponseHeaders = sinon.spy -> 'content-type: application/json; charset=utf-8\n'
 
-      it 'should have access to response headers'
-      it 'should pipeline more functions'
+          Q.xhr.get('/foo').done (resp) ->
+            resp.data.should.deep.equal
+              foo: 'bar'
 
-  describe 'timeout', ->
-    it 'should abort the request when the timeout expires'
+      it 'should have access to response headers', ->
+        Q.xhr.post('/foo', 'data',
+          headers:
+            h1: 'v1'
+          transformResponse: (data, headers) -> headers('h1').toUpperCase()
+        ).done (resp) ->
+          resp.data.should.equal 'V1'
+
+        scenario
+          title: 'accessToRespHeaders'
+          inFlight: ->
+            xhr.responseText = '{"foo":"bar"}'
+            xhr.status = 200
+            xhr.getAllResponseHeaders = sinon.spy -> 'h1: v1\n'
+
+      it 'should pipeline more functions', ->
+        Q.xhr.post('/foo', 'data',
+          transformResponse: [
+            (d, h) -> d + '-first:' + h('h1'),
+            (d) -> d.toUpperCase(),
+          ]
+        ).done (resp) ->
+          resp.data.should.equal 'RESP-FIRST:V1'
+
+        scenario
+          inFlight: ->
+            xhr.responseText = 'resp'
+            xhr.status = 200
+            xhr.getAllResponseHeaders = sinon.spy -> 'content-type: application/json; charset=utf-8\nh1: v1\n'
+
+  xdescribe 'timeout', ->
+    # clock = null
+    # beforeEach -> clock = sinon.useFakeTimers()
+    # afterEach -> clock.restore()
+
+    xit 'should abort the request when the timeout expires', ->
+      Q.xhr
+        url: '/foo',
+        timeout: 40
+
+      clock.tick 50
+
+      xhr.abort.should.have.been.called
+
     it 'should cancel timeout on completion'
 
   describe 'pendingRequests', ->
-    it 'should be an array of pending requests'
+    it 'should be an array of pending requests', ->
+      Q.xhr.pendingRequests.should.be.an('array').and.be.empty
+      Q.xhr.get '/pending-req-test'
+
+      scenario
+        inFlight: ->
+          xhr.status = 200
+          Q.xhr.pendingRequests.length.should.equal 1
+
     it 'should remove the request before firing callbacks'
 
   describe 'interceptors', ->
