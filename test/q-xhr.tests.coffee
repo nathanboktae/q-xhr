@@ -23,6 +23,7 @@ describe 'q-xhr', ->
       return
     opts.inFlight?()
     xhr.readyState = 4
+    xhr.status = 200 if not xhr.status?
     xhr.onreadystatechange()
     opts.afterComplete?()
     xhr.testDone = true
@@ -125,7 +126,15 @@ describe 'q-xhr', ->
         inFlight: ->
           xhr.open.should.have.been.calledWith 'GET', '/url?a=1&b=%7B%22c%22%3A3%7D'
 
-    it 'should expand arrays in params map'
+    it 'should expand arrays in params map', ->
+      Q.xhr
+        url: '/url',
+        params:
+          a: [1,2,3]
+
+      scenario
+        inFlight: ->
+          xhr.open.should.have.been.calledWith 'GET', '/url?a=1&a=2&a=3'
 
   describe 'callbacks', ->
     it 'should pass in the response object when a request is successful', ->
@@ -174,7 +183,6 @@ describe 'q-xhr', ->
       scenario
         inFlight: ->
           xhr.responseText = 'data'
-          xhr.status = 200
           xhr.getAllResponseHeaders = sinon.spy ->
             'content-type': 'text/plain'
             'content-length': '4'
@@ -215,7 +223,6 @@ describe 'q-xhr', ->
       parseHeaders = (rawHeaders, expect) ->
         scenario
           inFlight: ->
-            xhr.status = 200
             xhr.getAllResponseHeaders = -> rawHeaders
 
         Q.xhr({ url: '/foo' }).then (resp) ->
@@ -493,7 +500,6 @@ describe 'q-xhr', ->
           scenario
             inFlight: ->
               xhr.responseText = '{"foo":"bar"}'
-              xhr.status = 200
               xhr.getAllResponseHeaders = sinon.spy -> 'content-type: application/json; charset=utf-8\n'
 
           Q.xhr.get('/foo').done (resp) ->
@@ -512,7 +518,6 @@ describe 'q-xhr', ->
           title: 'accessToRespHeaders'
           inFlight: ->
             xhr.responseText = '{"foo":"bar"}'
-            xhr.status = 200
             xhr.getAllResponseHeaders = sinon.spy -> 'h1: v1\n'
 
       it 'should pipeline more functions', ->
@@ -527,53 +532,126 @@ describe 'q-xhr', ->
         scenario
           inFlight: ->
             xhr.responseText = 'resp'
-            xhr.status = 200
             xhr.getAllResponseHeaders = sinon.spy -> 'content-type: application/json; charset=utf-8\nh1: v1\n'
 
-  xdescribe 'timeout', ->
-    # clock = null
-    # beforeEach -> clock = sinon.useFakeTimers()
-    # afterEach -> clock.restore()
-
-    xit 'should abort the request when the timeout expires', ->
+  describe 'timeout', ->
+    it 'should abort the request when the timeout expires', ->
       Q.xhr
         url: '/foo',
-        timeout: 40
+        timeout: 20
 
-      clock.tick 50
+      Q.delay(30).then ->
+        xhr.abort.should.have.been.called
 
-      xhr.abort.should.have.been.called
+      # TODO Can I fake timing with Q? this is a ugly hack
+      Q.delay(40)
 
-    it 'should cancel timeout on completion'
+    it 'should cancel timeout on completion', ->
+      Q.xhr
+        url: '/greeting'
+        timeout: 20
+
+      scenario
+        inFlight: ->
+          xhr.responseText = 'hi!'
+
+      Q.delay(40).then ->
+        xhr.abort.should.have.not.been.called
 
   describe 'pendingRequests', ->
     it 'should be an array of pending requests', ->
       Q.xhr.pendingRequests.should.be.an('array').and.be.empty
+
+    it 'should contain requests in flight', ->
       Q.xhr.get '/pending-req-test'
 
       scenario
         inFlight: ->
-          xhr.status = 200
           Q.xhr.pendingRequests.length.should.equal 1
 
-    it 'should remove the request before firing callbacks'
+    it 'should remove the request before firing callbacks', ->
+      Q.xhr.get('/greeting').then ->
+        Q.xhr.pendingRequests.should.be.empty
+
+      scenario
+        inFlight: ->
+          xhr.response = 'hi!'
 
   describe 'interceptors', ->
-    it 'should accept injected rejected response interceptor'
-    it 'should chain request, requestReject, response and responseReject interceptors'
-    it 'should verify order of execution'
+    it 'should chain request, requestReject, response and responseReject interceptors', ->
+      savedConfig = null
+      savedResponse = null
+      Q.xhr.interceptors = [
+        request: sinon.spy (config) ->
+          config.url += '/1'
+          savedConfig = config
+          Q.reject '/2'
+      ,
+        requestError: sinon.spy (err) -> 
+          Q.when savedConfig
+      ,
+        response: sinon.spy (resp) ->
+          savedResponse = resp
+          Q.reject 'boom!'
+      ,
+        responseError: sinon.spy (respErr) -> savedResponse
+      ]
 
-    describe 'response interceptors', ->
-      it 'should default to an empty array', ->
-        Q.xhr.interceptors.should.be.an('array').and.be.empty
+      Q.xhr.get('/books').then (resp) ->
+        Q.xhr.interceptors[0].request.should.have.been.calledBefore(Q.xhr.interceptors[1].requestError)
+        Q.xhr.interceptors[1].requestError.should.have.been.calledBefore(Q.xhr.interceptors[2].response)
+        Q.xhr.interceptors[2].response.should.have.been.calledBefore(Q.xhr.interceptors[3].responseError)
+        Q.xhr.interceptors[3].responseError.should.have.been.calledOnce
 
-      it 'should pass the responses through interceptors'
+      scenario
+        inFlight: ->
+          xhr.open.should.have.been.calledWith 'GET', '/books/1'
+          xhr.responseText = 'hi'
 
     describe 'request interceptors', ->
-      it 'should pass request config as a promise'
-      it 'should allow manipulation of request'
-      it 'should allow replacement of the headers object'
-      it 'should reject the http promise if an interceptor fails'
-      it 'should not manipulate the passed-in config'
-      it 'should support complex interceptors based on promises'
+      it 'should provide a copy of the config', ->
+        Q.xhr.interceptors = [
+          request: (config) ->
+            config.url.should.equal '/books'
+            config.url = '/intercepted'
+            config.headers =
+              'x-custom-auth': 'secretpassword'
+            config
+        ]
+        config = 
+          url: '/books'
+          headers:
+            foo: 'bar'
+
+        Q.xhr config
+
+        scenario
+          inFlight: ->
+            config.url.should.equal '/books'
+            config.headers.foo.should.equal 'bar'
+
+      it 'should allow manipulation of the request', ->
+        Q.xhr.interceptors = [
+          request: (config) ->
+            config.url.should.equal '/books'
+            config.url = '/intercepted'
+            config.headers =
+              'x-custom-auth': 'secretpassword'
+            config
+        ]
+        Q.xhr.get '/books'
+
+        scenario
+          inFlight: ->
+            xhr.open.should.have.been.calledWith 'GET', '/intercepted'
+            xhr.setRequestHeader.should.have.been.calledWith 'x-custom-auth', 'secretpassword'
+
+      it 'should reject the http promise if an interceptor fails', ->
+        Q.xhr.interceptors = [
+          request: (config) -> Q.reject 'boom!'
+        ]
+        Q.xhr.get('/books').then ->
+          throw new Error 'request should have not succeded'
+        , (err) ->
+          err.should.equal 'boom!'
  

@@ -199,24 +199,23 @@
       return isSuccess(response.status) ? response : Q.reject(response)
     },
 
-    chain = [serverRequest, undefined],
     promise = Q.when(config)
 
-    Q.xhr.interceptors.forEach(function(interceptor) {
-      if (interceptor.request || interceptor.requestError) {
-        chain.unshift(interceptor.request, interceptor.requestError)
-      }
-      if (interceptor.response || interceptor.responseError) {
-        chain.push(interceptor.response, interceptor.responseError)
-      }
+    // build a promise chain with request interceptors first, then the request, and response interceptors
+    Q.xhr.interceptors.filter(function(interceptor) {
+        return !!interceptor.request || !!interceptor.requestError
+      }).map(function(interceptor) {
+        return { success: interceptor.request, failure: interceptor.requestError }
+      })
+    .concat({ success: serverRequest })
+    .concat(Q.xhr.interceptors.filter(function(interceptor) {
+        return !!interceptor.response || !!interceptor.responseError
+      }).map(function(interceptor) {
+        return { success: interceptor.response, failure: interceptor.responseError }
+      })
+    ).forEach(function(then) {
+      promise = promise.then(then.success, then.failure)
     })
-
-    while (chain.length) {
-      var thenFn = chain.shift()
-      var rejectFn = chain.shift()
-
-      promise = promise.then(thenFn, rejectFn)
-    }
 
     return promise
   }
