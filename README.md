@@ -1,9 +1,9 @@
-## q-xhr: Do ajax with powerful Q promises
+## q-xhr: Do ajax with powerful [Q] promises
 
 [![Build Status](https://secure.travis-ci.org/nathanboktae/q-xhr.png?branch=master)](https://travis-ci.org/nathanboktae/q-xhr)
 
 ### Why q-xhr and not $.ajax?
-jQuery promises [have flaws](http://domenic.me/2012/10/14/youre-missing-the-point-of-promises/) that make them Promises/A+ compliant and [they are not going to be fixed.](http://esdiscuss.org/topic/a-challenge-problem-for-promise-designers-was-re-futures#content-43). [Q] also has a lot more functions for promise manipluation and management.
+jQuery promises [have flaws](http://domenic.me/2012/10/14/youre-missing-the-point-of-promises/) that make them Promises/A+ compliant and [they are not going to be fixed](http://esdiscuss.org/topic/a-challenge-problem-for-promise-designers-was-re-futures#content-43). Q also has a lot more functions for promise manipluation and management.
 
 Once you have a good MVC framework, taking a dependency on a 94kb minified (1.11) library just for `$.ajax` is alot, expecially when [Q] is 19k minified (probably half if you remove the node.js specifics). For example, [Knockout 3.0](http://knockoutjs.com) is 45k minified, and includes support all the way back to IE6 - and you can structure your code properly with it instead of creating spaghetti code coupled to the DOM.
 

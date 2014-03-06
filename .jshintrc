@@ -1,0 +1,11 @@
+{
+	"asi": true,
+	"eqeqnull": true,
+	"browser": true,
+	"indent": 2,
+	"globals": {
+		"mocha": true,
+		"chai": true,
+		"require": true,
+	}
+}

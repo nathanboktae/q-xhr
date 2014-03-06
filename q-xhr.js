@@ -1,4 +1,3 @@
-//jshint asi:true
 // Currently requires polyfills for
 // Array#forEach
 // Object.keys
