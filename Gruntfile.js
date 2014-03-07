@@ -4,7 +4,49 @@ module.exports = function(grunt) {
       server: {
         options: {
           base: '',
-          port: 9999
+          port: 9999,
+          middleware: function(connect, options, middlewares) {
+            var URL = require('url')
+            middlewares.push(function(req, res, next) {
+              var url = URL.parse(req.url, true), closed = false
+
+              req.once('close', function() {
+                closed = true
+              })
+              var handle = function () {
+                var status = parseInt(url.query.status || '200', 10)
+                if (url.pathname === '/headers') {
+                  if (closed) return
+                  res.writeHead(status)
+                  res.write(JSON.stringify(req.headers))
+                  req.pipe(res)
+                } else if (url.pathname.indexOf('/json/') === 0) {
+                  if (closed) return
+                  res.setHeader('Content-Type', 'application/json')
+                  res.writeHead(status)
+
+                  var pieces = url.pathname.split('/').splice(2),
+                      data = {}
+
+                  for (var i = 0; i < pieces.length; i += 2) {
+                    data[pieces[i]] = pieces[i + 1]
+                  }
+
+                  res.write(JSON.stringify(data))
+                  req.pipe(res)
+                } else {
+                  next()
+                }
+              }
+
+              if (url.query.latency)
+                delay(handle, parseInt(url.query.latency, 10))
+              else
+                handle()
+            })
+
+            return middlewares
+          },
         }
       }
     },
@@ -16,36 +58,40 @@ module.exports = function(grunt) {
           build: process.env.TRAVIS_JOB_ID || 0,
           concurrency: 3,
           browsers: [{
-          //   browserName:"iphone",
-          //   platform: "OS X 10.8",
-          //   version: "6"
-          // }, {
-          //   browserName:"iphone",
-          //   platform: "OS X 10.6",
-          //   version: "5.0"
-          // }, {
-          //   browserName:"safari",
-          //   platform: "OS X 10.8",
-          //   version: "6"
-          // }, {
-          //   browserName:"safari",
-          //   platform: "OS X 10.6",
-          //   version: "5"
-          // }, {
-          //   browserName:"android",
-          //   platform: "Linux",
-          //   version: "4.0"
-          // }, {
-          //   browserName: 'googlechrome',
-          //   platform: 'linux'
-          // }, {
-          //   browserName: 'firefox',
-          //   platform: 'WIN7',
-          // }, {
-          //   browserName: 'internet explorer',
-          //   platform: 'WIN8',
-          //   version: '10'
-          // }, {
+            browserName:"iphone",
+            platform: "OS X 10.8",
+            version: "6"
+          }, {
+            browserName:"iphone",
+            platform: "OS X 10.6",
+            version: "5.0"
+          }, {
+            browserName:"safari",
+            platform: "OS X 10.8",
+            version: "6"
+          }, {
+            browserName:"safari",
+            platform: "OS X 10.6",
+            version: "5"
+          }, {
+            browserName:"android",
+            platform: "Linux",
+            version: "4.0"
+          }, {
+            browserName: 'googlechrome',
+            platform: 'linux'
+          }, {
+            browserName: 'firefox',
+            platform: 'WIN7',
+          }, {
+            browserName: 'firefox',
+            version: '19',
+            platform: 'XP',
+          }, {
+            browserName: 'internet explorer',
+            platform: 'WIN8',
+            version: '10'
+          }, {
             browserName: 'internet explorer',
             platform: 'XP',
             version: '8'
