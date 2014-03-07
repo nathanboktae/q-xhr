@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>q-xhr tests</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" href="../node_modules/mocha/mocha.css">
+  <script src="../node_modules/mocha/mocha.js"></script>
+  <script src="../node_modules/chai/chai.js"></script>
+  <script src="../node_modules/sinon/lib/sinon.js"></script>
+  <script src="../node_modules/sinon-chai/lib/sinon-chai.js"></script>
+</head>
+<body>
+  <div id="mocha"></div>
+
+  <script>
+    var should = chai.should();
+    chai.Assertion.includeStack = true;
+    mocha.ui('bdd');
+  </script>
+
+  <script src="../node_modules/q/q.js"></script>
+  <script src="../q-xhr.js"></script>
+  <script src="browser.tests.js"></script>
+
+  <script>
+    window.onload = function() {
+      var runner = mocha.run(),
+          tests = [];
+      runner.on('end', function(){
+        window.global_test_results = {
+          passed: runner.stats.passes,
+          failed: runner.stats.failures,
+          total: runner.stats.tests,
+          duration: runner.stats.duration,
+          tests: tests
+        }
+      })
+
+      runner.on('pass', function(test) {
+        tests.push({
+          name: test.fullTitle(),
+          result: true,
+          message: test.duration + 'ms'
+        });
+      });
+
+      runner.on('fail', function (test, err) {
+        tests.push({
+          name: test.fullTitle(),
+          result: false,
+          duration: test.duration,
+          message: err.stack || err.message
+        });
+      });
+    };
+  </script>
+</body>
+</html>

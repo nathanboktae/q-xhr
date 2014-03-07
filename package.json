@@ -23,21 +23,26 @@
   "license": "MIT",
   "devDependencies": {
     "q": "latest",
-    "mocha": ">= 1.14.x < 2",
+    "mocha": "~1.14.0",
     "mocha-as-promised": "2.x.x",
-    "chai": ">= 1.8.1 < 2",
-    "chai-as-promised": ">= 4.1.0",
-    "sinon": ">= 1.7.3 < 2",
-    "sinon-chai": ">= 2.5.0 < 3",
-    "coffee-script": ">= 1.7 < 2"
+    "chai": "~1.8.1",
+    "chai-as-promised": "~4.1.0",
+    "sinon": "~1.7.3",
+    "sinon-chai": "~2.5.0",
+    "coffee-script": "~1.7.1",
+    "grunt": "~0.4.2",
+    "grunt-cli": "~0.1.13",
+    "grunt-saucelabs": "git://github.com/nathanboktae/grunt-saucelabs#custom-framework",
+    "grunt-contrib-connect": "~0.7.1"
   },
   "scripts": {
-    "test": "./node_modules/mocha/bin/mocha -R spec"
+    "test": "./node_modules/mocha/bin/mocha -R spec && ./node_modules/coffee-script/bin/coffee -c test/browser.tests.coffee && grunt test"
   },
   "testling": {
     "harness": "mocha-bdd",
     "files": "test/browser.tests.js",
     "browsers": [
+      "ie/10",
       "chrome/latest",
       "firefox/latest",
       "iphone/latest",

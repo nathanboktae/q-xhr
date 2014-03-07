@@ -2,8 +2,7 @@
 
 [![Build Status](https://secure.travis-ci.org/nathanboktae/q-xhr.png?branch=master)](https://travis-ci.org/nathanboktae/q-xhr)
 
-[![browser support](https://ci.testling.com/nathanboktae/q-xhr.png)
-](https://ci.testling.com/nathanboktae/q-xhr)
+[![Selenium Test Status](https://saucelabs.com/browser-matrix/nathanboktae.svg)](https://saucelabs.com/u/nathanboktae)
 
 ### Why q-xhr and not $.ajax?
 jQuery promises [have flaws](http://domenic.me/2012/10/14/youre-missing-the-point-of-promises/) that make them Promises/A+ compliant and [they are not going to be fixed](http://esdiscuss.org/topic/a-challenge-problem-for-promise-designers-was-re-futures#content-43). Q also has a lot more functions for promise manipluation and management.
