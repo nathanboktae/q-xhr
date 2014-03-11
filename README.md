@@ -6,9 +6,33 @@
 [![Selenium Test Status](https://saucelabs.com/browser-matrix/nathanboktae.svg)](https://saucelabs.com/u/nathanboktae)
 
 ### Why q-xhr and not $.ajax?
+
 jQuery promises [have flaws](http://domenic.me/2012/10/14/youre-missing-the-point-of-promises/) that make them Promises/A+ compliant and [they are not going to be fixed](http://esdiscuss.org/topic/a-challenge-problem-for-promise-designers-was-re-futures#content-43). Q also has a lot more functions for promise manipluation and management.
 
 Once you have a good MVC framework, taking a dependency on a 94kb minified (1.11) library just for `$.ajax` is alot, expecially when [Q] is 19k minified (probably half if you remove the node.js specifics). For example, [Knockout 3.0](http://knockoutjs.com) is 45k minified, and includes support all the way back to IE6 - and you can structure your code properly with it instead of creating spaghetti code coupled to the DOM.
+
+### Examples
+
+Get some JSON:
+```javascript
+  Q.xhr.get('/status').done(function(resp) {
+    console.log('status is ' + resp.data)
+  })
+```
+
+Post some JSON:
+
+```javascript
+  Q.xhr.post('/greet', {
+    say: 'hello'
+  }).then(function(resp) {
+    console.log('success!')
+  }, function(resp) {
+    console.log('request failed with status' + resp.status)
+  })
+```
+
+With modern web applications in mind, `application/json` is the default mime type.
 
 ### Differences from [Angular's $http][$http]
 
