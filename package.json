@@ -30,6 +30,8 @@
     "sinon": "~1.7.3",
     "sinon-chai": "~2.5.0",
     "coffee-script": "~1.7.1",
+    "expect.js": "~0.3.1",
+    "es5-shim": "~2.3.0",
     "grunt": "~0.4.2",
     "grunt-cli": "~0.1.13",
     "grunt-saucelabs": "latest",

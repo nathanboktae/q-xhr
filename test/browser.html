@@ -4,19 +4,18 @@
   <meta charset="utf-8">
   <title>q-xhr tests</title>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" href="mocha.css">
+<!--[if lte IE 8]>
+  <script src="../node_modules/es5-shim/es5-shim.min.js"></script>
+<![endif]-->
   <link rel="stylesheet" href="../node_modules/mocha/mocha.css">
   <script src="../node_modules/mocha/mocha.js"></script>
-  <script src="../node_modules/mocha-as-promised/mocha-as-promised.js"></script>
-  <script src="../node_modules/chai/chai.js"></script>
-  <script src="../node_modules/sinon/lib/sinon.js"></script>
-  <script src="../node_modules/sinon-chai/lib/sinon-chai.js"></script>
+  <script src="../node_modules/expect.js/index.js"></script>
 </head>
 <body>
   <div id="mocha"></div>
 
   <script>
-    var should = chai.should();
-    chai.Assertion.includeStack = true;
     mocha.ui('bdd');
   </script>
 
@@ -40,12 +39,12 @@
         return titles.reverse();
       };
 
-      runner.on('end', function(){
+      runner.on('end', function() {
         window.mochaResults = runner.stats;
         window.mochaResults.reports = failedTests;
       });
 
-      runner.on('fail', function logFailure(test, err){
+      runner.on('fail', function (test, err) {
         failedTests.push({
           name: test.title,
           result: false,
