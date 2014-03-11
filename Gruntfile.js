@@ -17,9 +17,10 @@ module.exports = function(grunt) {
                 var status = parseInt(url.query.status || '200', 10)
                 if (url.pathname === '/headers') {
                   if (closed) return
+                  res.setHeader('Content-Type', 'application/json')
                   res.writeHead(status)
                   res.write(JSON.stringify(req.headers))
-                  req.pipe(res)
+                  res.end()
                 } else if (url.pathname.indexOf('/json/') === 0) {
                   if (closed) return
                   res.setHeader('Content-Type', 'application/json')
@@ -33,7 +34,7 @@ module.exports = function(grunt) {
                   }
 
                   res.write(JSON.stringify(data))
-                  req.pipe(res)
+                  res.end()
                 } else {
                   next()
                 }
@@ -50,7 +51,7 @@ module.exports = function(grunt) {
         }
       }
     },
-    'saucelabs-custom': {
+    'saucelabs-mocha': {
       all: {
         options: {
           urls: ['http://127.0.0.1:9999/test/browser.html'],
@@ -100,7 +101,7 @@ module.exports = function(grunt) {
             platform: 'WIN7',
             version: '9'
           }],
-          testname: 'whack',
+          testname: 'q-xhr browser tests',
           tags: [process.env.TRAVIS_BRANCH || 'local']
         }
       }
@@ -110,5 +111,5 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-saucelabs')
   grunt.loadNpmTasks('grunt-contrib-connect')
 
-  grunt.registerTask('test', ['connect', 'saucelabs-custom'])
+  grunt.registerTask('test', ['connect', 'saucelabs-mocha'])
 }

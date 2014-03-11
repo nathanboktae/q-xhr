@@ -17,4 +17,13 @@ describe('q-xhr', function() {
       resp.data.foo.should.equal('bar')
     })
   })
+
+  it('should send Accepts and Content-Type default headers for POSTs', function() {
+    return Q.xhr.post('/headers', {
+      ignored: true
+    }).then(function(resp) {
+      resp.data['accept'].toLowerCase().should.contain('application/json')
+      resp.data['content-type'].toLowerCase().should.equal('application/json;charset=utf-8')
+    })
+  })
 })

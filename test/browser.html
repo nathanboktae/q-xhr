@@ -6,6 +6,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <link rel="stylesheet" href="../node_modules/mocha/mocha.css">
   <script src="../node_modules/mocha/mocha.js"></script>
+  <script src="../node_modules/mocha-as-promised/mocha-as-promised.js"></script>
   <script src="../node_modules/chai/chai.js"></script>
   <script src="../node_modules/sinon/lib/sinon.js"></script>
   <script src="../node_modules/sinon-chai/lib/sinon-chai.js"></script>
@@ -24,33 +25,33 @@
   <script src="browser.tests.js"></script>
 
   <script>
-    window.onload = function() {
+    window.onload = function(){
+      //mocha.checkLeaks();
+      //mocha.globals(['foo']);
       var runner = mocha.run(),
-          tests = [];
-      runner.on('end', function(){
-        window.global_test_results = {
-          passed: runner.stats.passes,
-          failed: runner.stats.failures,
-          total: runner.stats.tests,
-          duration: runner.stats.duration,
-          tests: tests
-        }
-      })
+          failedTests = [];
 
-      runner.on('pass', function(test) {
-        tests.push({
-          name: test.fullTitle(),
-          result: true,
-          message: test.duration + 'ms'
-        });
+      var flattenTitles = function(test){
+        var titles = [];
+        while (test.parent.title){
+          titles.push(test.parent.title);
+          test = test.parent;
+        }
+        return titles.reverse();
+      };
+
+      runner.on('end', function(){
+        window.mochaResults = runner.stats;
+        window.mochaResults.reports = failedTests;
       });
 
-      runner.on('fail', function (test, err) {
-        tests.push({
-          name: test.fullTitle(),
+      runner.on('fail', function logFailure(test, err){
+        failedTests.push({
+          name: test.title,
           result: false,
-          duration: test.duration,
-          message: err.stack || err.message
+          message: err.message,
+          stack: err.stack,
+          titles: flattenTitles(test)
         });
       });
     };
