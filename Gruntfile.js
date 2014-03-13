@@ -21,6 +21,25 @@ module.exports = function(grunt) {
                   res.writeHead(status)
                   res.write(JSON.stringify(req.headers))
                   res.end()
+                } else if (url.pathname === '/echo/url') {
+                  if (closed) return
+                  res.setHeader('Content-Type', 'text/plain')
+                  res.writeHead(status)
+                  res.write(req.url)
+                  res.end()
+                } else if (url.pathname === '/echo/body') {
+                  if (closed) return
+                  res.setHeader('Content-Type', req.headers['content-type'])
+                  res.writeHead(status)
+
+                  var body = ''
+                  req.on('data', function (data) {
+                    body += data
+                  })
+                  req.on('end', function () {
+                    res.write(body)
+                    res.end()
+                  })
                 } else if (url.pathname.indexOf('/json/') === 0) {
                   if (closed) return
                   res.setHeader('Content-Type', 'application/json')
@@ -41,7 +60,7 @@ module.exports = function(grunt) {
               }
 
               if (url.query.latency)
-                delay(handle, parseInt(url.query.latency, 10))
+                setTimeout(handle, parseInt(url.query.latency, 10))
               else
                 handle()
             })
