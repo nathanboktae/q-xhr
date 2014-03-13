@@ -41,6 +41,10 @@
       runner.on('end', function() {
         window.mochaResults = runner.stats;
         window.mochaResults.reports = failedTests;
+
+        var blah = document.createElement('h1')
+        blah.innerHTML = 'mochaResults: ' + JSON.stringify(window.mochaResults)
+        document.querySelector('body').appendChild(blah)
       });
 
       runner.on('fail', function (test, err) {

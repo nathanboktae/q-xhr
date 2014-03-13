@@ -107,9 +107,6 @@ module.exports = function(grunt) {
             browserName: 'firefox',
             version: '19',
             platform: 'XP',
-          }, {
-            browserName: "opera",
-            platform: "linux"
           },{
             browserName: 'internet explorer',
             platform: 'WIN8.1',
@@ -120,12 +117,15 @@ module.exports = function(grunt) {
             version: '10'
           }, {
             browserName: 'internet explorer',
+            platform: 'WIN7',
+            version: '9'
+          }, {
+            browserName: 'internet explorer',
             platform: 'XP',
             version: '8'
           }, {
-            browserName: 'internet explorer',
-            platform: 'WIN7',
-            version: '9'
+            browserName: "opera",
+            platform: "linux"
           }],
           testname: 'q-xhr browser tests',
           tags: [process.env.TRAVIS_BRANCH || 'local']
