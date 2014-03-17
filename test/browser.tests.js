@@ -90,7 +90,7 @@ describe('q-xhr', function() {
         }
       }).then(function(resp) {
         expect(resp.data).to.equal(xml)
-        expect(resp.headers('CONTENT-Type')).to.equal('text/xml')
+        expect(resp.headers('CONTENT-Type')).to.contain('text/xml')
         done()
       }).fail(failTest(done))
     })

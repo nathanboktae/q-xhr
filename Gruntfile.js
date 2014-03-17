@@ -70,7 +70,7 @@ module.exports = function(grunt) {
         }
       }
     },
-    'saucelabs-mocha': {
+    'saucelabs-custom': {
       all: {
         options: {
           urls: ['http://127.0.0.1:9999/test/browser.html'],
@@ -137,5 +137,5 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-saucelabs')
   grunt.loadNpmTasks('grunt-contrib-connect')
 
-  grunt.registerTask('test', ['connect', 'saucelabs-mocha'])
+  grunt.registerTask('test', ['connect', 'saucelabs-custom'])
 }

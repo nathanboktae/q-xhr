@@ -23,37 +23,33 @@
   <script src="browser.tests.js"></script>
 
   <script>
-    window.onload = function(){
-      //mocha.checkLeaks();
-      //mocha.globals(['foo']);
+    window.onload = function() {
       var runner = mocha.run(),
-          failedTests = [];
-
-      var flattenTitles = function(test){
-        var titles = [];
-        while (test.parent.title){
-          titles.push(test.parent.title);
-          test = test.parent;
+          tests = [];
+      runner.on('end', function(){
+        window.global_test_results = {
+          passed: runner.stats.passes,
+          failed: runner.stats.failures,
+          total: runner.stats.tests,
+          duration: runner.stats.duration,
+          tests: tests
         }
-        return titles.reverse();
-      };
+      })
 
-      runner.on('end', function() {
-        window.mochaResults = runner.stats;
-        window.mochaResults.reports = failedTests;
-
-        var blah = document.createElement('h1')
-        blah.innerHTML = 'mochaResults: ' + JSON.stringify(window.mochaResults)
-        document.querySelector('body').appendChild(blah)
+      runner.on('pass', function(test) {
+        tests.push({
+          name: test.fullTitle(),
+          result: true,
+          message: test.duration + 'ms'
+        });
       });
 
       runner.on('fail', function (test, err) {
-        failedTests.push({
-          name: test.title,
+        tests.push({
+          name: test.fullTitle(),
           result: false,
-          message: err.message,
-          stack: err.stack,
-          titles: flattenTitles(test)
+          duration: test.duration,
+          message: (err.message || '<no message>') + ': ' + err.stack
         });
       });
     };
