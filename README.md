@@ -44,6 +44,19 @@ On the topic of MVC frameworks not needing jQuery, The [Angular] devs have adopt
 - **The default JSON transform is only applied if the response content is `application/json`**. [Angular] was doing something odd by sniffing all content via regex matching and then converting it to JSON if it matched. Why? Geez people set your `Content-Type` correctly already. Not to mention content sniffing leads to [security issues](http://blogs.msdn.com/b/ie/archive/2008/09/02/ie8-security-part-vi-beta-2-update.aspx).
 - **Progress support**. [Coming soon](https://github.com/nathanboktae/q-xhr/issues/2)
 
+### Installation
+
+#### Bower
+
+```
+bower install q-xhr
+```
+
+#### npm
+
+```
+npm install q-xhr
+```
 
 [Q]: https://github.com/kriskowal/q
 [Angular]: http://angularjs.org/

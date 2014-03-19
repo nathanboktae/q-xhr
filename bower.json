@@ -1,0 +1,26 @@
+{
+  "name": "q-xhr",
+  "main": "q-xhr.js",
+  "version": "0.1.0",
+  "homepage": "https://github.com/nathanboktae/q-xhr",
+  "authors": [
+    "Nathan Black <nathan@nathanblack.org>"
+  ],
+  "description": "XMLHttpRequest (ajax) using Q - a port of Angular's $http service",
+  "keywords": [
+    "ajax",
+    "q",
+    "xhr",
+    "promises",
+    "deferred"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "test"
+  ],
+  "dependencies": {
+    "q": "1.x.x"
+  }
+}
