@@ -290,11 +290,14 @@
         ;(isSuccess(status) ? deferred.resolve : deferred.reject)({
           data: response,
           status: status,
-          // TODO: getter or just the object?
           headers: headersGetter(responseHeaders),
           config: config
         })
       }
+    }
+
+    xhr.onprogress = function (progress) {
+      deferred.notify(progress)
     }
 
     if (config.withCredentials) {

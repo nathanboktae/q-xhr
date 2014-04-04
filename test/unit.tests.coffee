@@ -91,6 +91,18 @@ describe 'q-xhr', ->
       inFlight: ->
         xhr.withCredentials.should.be.true
 
+  it 'should send progress notifications', (done) ->
+    Q.xhr(
+      url: '/foo'
+    ).progress (prog) ->
+      prog.should.equal 'progress!'
+      done()
+
+    scenario
+      inFlight: ->
+        xhr.onprogress('progress!')
+    return
+
   describe 'params', ->
     it 'should do basic request with params and encode', ->
       Q.xhr
