@@ -1,5 +1,3 @@
-require('mocha-as-promised')()
-
 describe 'q-xhr', ->
   sinon = require 'sinon'
   Q = require 'q'
@@ -30,7 +28,7 @@ describe 'q-xhr', ->
     Q.xhr.pendingRequests[0]
 
   scenario = (opts) ->
-    Q.delay(1).then -> if xhr? then runScenario opts else scenario opts
+    Q(null).then -> if xhr? then runScenario opts else scenario opts
 
   beforeEach ->
     xhr = null
@@ -150,12 +148,6 @@ describe 'q-xhr', ->
 
   describe 'callbacks', ->
     it 'should pass in the response object when a request is successful', ->
-      scenario
-        inFlight: ->
-          xhr.responseType = 'string'
-          xhr.response = 'hi!'
-          xhr.status = 200
-
       Q.xhr(
         url: '/foo',
         method: 'GET'
@@ -163,13 +155,13 @@ describe 'q-xhr', ->
         resp.data.should.equal 'hi!'
         resp.status.should.equal 200
 
-    it 'should pass in the response object when a request failed', ->
       scenario
         inFlight: ->
           xhr.responseType = 'string'
-          xhr.response = 'oops!'
-          xhr.status = 500
+          xhr.response = 'hi!'
+          xhr.status = 200
 
+    it 'should pass in the response object when a request failed', ->
       Q.xhr(
         url: '/foo',
         method: 'GET'
@@ -177,18 +169,24 @@ describe 'q-xhr', ->
         resp.data.should.equal 'oops!'
         resp.status.should.equal 500
 
-    it 'should set the response from xhr.responseText if xhr.responseType isnt available', ->
       scenario
         inFlight: ->
-          xhr.responseText = 'hi!'
-          xhr.status = 200
+          xhr.responseType = 'string'
+          xhr.response = 'oops!'
+          xhr.status = 500
 
+    it 'should set the response from xhr.responseText if xhr.responseType isnt available', ->
       Q.xhr(
         url: '/foo',
         method: 'GET'
       ).then (resp) ->
         resp.data.should.equal 'hi!'
         resp.status.should.equal 200
+
+      scenario
+        inFlight: ->
+          xhr.responseText = 'hi!'
+          xhr.status = 200
 
   describe 'response headers', ->
     headersScenario = ->
@@ -201,8 +199,6 @@ describe 'q-xhr', ->
             'x-frame-options': 'nosniff'
 
     it 'should return single header', ->
-      headersScenario()
-
       Q.xhr(
         url: '/foo',
         method: 'GET'
@@ -210,18 +206,18 @@ describe 'q-xhr', ->
         xhr.getAllResponseHeaders.should.have.been.calledOnce
         resp.headers('X-Frame-Options').should.equal 'nosniff'
 
-    it 'should return null when single header does not exist', ->
       headersScenario()
 
+    it 'should return null when single header does not exist', ->
       Q.xhr(
         url: '/foo',
         method: 'GET'
       ).then (resp) ->
         (typeof resp.headers('etag')).should.equal 'undefined'
 
-    it 'should return all headers as object', ->
       headersScenario()
 
+    it 'should return all headers as object', ->
       Q.xhr(
         url: '/foo',
         method: 'GET'
@@ -231,14 +227,16 @@ describe 'q-xhr', ->
           'content-length': '4'
           'x-frame-options': 'nosniff'
 
+      headersScenario()
+
     describe 'parsing', ->
       parseHeaders = (rawHeaders, expect) ->
+        Q.xhr({ url: '/foo' }).then (resp) ->
+          expect resp.headers()
+
         scenario
           inFlight: ->
             xhr.getAllResponseHeaders = -> rawHeaders
-
-        Q.xhr({ url: '/foo' }).then (resp) ->
-          expect resp.headers()
 
       it 'should parse basic', ->
         parseHeaders 'date: Thu, 04 Aug 2011 20:23:08 GMT\n' + 'content-encoding: gzip\n' + 'transfer-encoding: chunked\n' + 'x-cache-info: not cacheable; response has already expired, not cacheable; response has already expired\n' + 'connection: Keep-Alive\n' + 'x-backend-server: pm-dekiwiki03\n' + 'pragma: no-cache\n' + 'server: Apache\n' + 'x-frame-options: DENY\n' + 'content-type: text/html; charset=utf-8\n' + 'vary: Cookie, Accept-Encoding\n' + 'keep-alive: timeout=5, max=1000\n' + 'expires: Thu: , 19 Nov 1981 08:52:00 GMT\n'
@@ -509,14 +507,14 @@ describe 'q-xhr', ->
     describe 'response', ->
       describe 'default', ->
         it 'should deserialize json when Content-Type is json', ->
-          scenario
-            inFlight: ->
-              xhr.responseText = '{"foo":"bar"}'
-              xhr.getAllResponseHeaders = sinon.spy -> 'content-type: application/json; charset=utf-8\n'
-
           Q.xhr.get('/foo').done (resp) ->
             resp.data.should.deep.equal
               foo: 'bar'
+
+          scenario
+            inFlight: ->
+              xhr.responseText = '{"foo":"bar"}'
+              xhr.getAllResponseHeaders = -> 'content-type: application/json; charset=utf-8\n'
 
       it 'should have access to response headers', ->
         Q.xhr.post('/foo', 'data',
@@ -530,7 +528,7 @@ describe 'q-xhr', ->
           title: 'accessToRespHeaders'
           inFlight: ->
             xhr.responseText = '{"foo":"bar"}'
-            xhr.getAllResponseHeaders = sinon.spy -> 'h1: v1\n'
+            xhr.getAllResponseHeaders = -> 'h1: v1\n'
 
       it 'should pipeline more functions', ->
         Q.xhr.post('/foo', 'data',
@@ -544,7 +542,7 @@ describe 'q-xhr', ->
         scenario
           inFlight: ->
             xhr.responseText = 'resp'
-            xhr.getAllResponseHeaders = sinon.spy -> 'content-type: application/json; charset=utf-8\nh1: v1\n'
+            xhr.getAllResponseHeaders = -> 'content-type: application/json; charset=utf-8\nh1: v1\n'
 
   describe 'timeout', ->
     it 'should abort the request when the timeout expires', ->
