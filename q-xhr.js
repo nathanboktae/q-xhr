@@ -5,7 +5,7 @@
 
 (function(factory) {
   if (typeof define === 'function' && define.amd) {
-    define(['Q'], function(Q) {
+    define(['q'], function(Q) {
       return factory(XMLHttpRequest, Q)
     })
   } else if (typeof exports === 'object' && typeof module === 'object') {
