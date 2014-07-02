@@ -58,6 +58,35 @@ bower install q-xhr
 npm install q-xhr
 ```
 
+### Usage
+
+#### browserify
+
+```
+var Q = require('q-xhr')(window.XMLHttpRequest, require('q'))
+Q.xhr.get('https://api.github.com/users/nathanboktae/events').then(.....)
+```
+
+#### AMD
+
+Assuming that `q-xhr.js` and `q.js` are [in your `baseUrl`](http://requirejs.org/docs/api.html#config-baseUrl)
+
+```
+require(['q-xhr'], function(Q) {
+  Q.xhr.get('https://api.github.com/users/nathanboktae/events').then(.....)
+})
+```
+
+#### Plain old scripts
+
+```
+<script src="q.js"></script>
+<script src="q-xhr.js"></script>
+<script>
+  Q.xhr.get('https://api.github.com/users/nathanboktae/events').then(.....)
+</script>
+```
+
 [Q]: https://github.com/kriskowal/q
 [Angular]: http://angularjs.org/
 [$http]: http://docs.angularjs.org/api/ng/service/$http
