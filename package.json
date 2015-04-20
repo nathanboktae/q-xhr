@@ -1,6 +1,6 @@
 {
   "name": "q-xhr",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "XMLHttpRequest (ajax) using powerful Q promises",
   "author": "Nathan Black <nathan@nathanblack.org>",
   "main": "q-xhr.js",

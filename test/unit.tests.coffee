@@ -516,6 +516,15 @@ describe 'q-xhr', ->
               xhr.responseText = '{"foo":"bar"}'
               xhr.getAllResponseHeaders = -> 'content-type: application/json; charset=utf-8\n'
 
+        it 'should not throw on an empty body when Content-Type is json', ->
+          Q.xhr.get('/foo').done (resp) ->
+            resp.data.should.equal ''
+
+          scenario
+            inFlight: ->
+              xhr.responseText = ''
+              xhr.getAllResponseHeaders = -> 'content-type: application/json; charset=utf-8\n'
+
       it 'should have access to response headers', ->
         Q.xhr.post('/foo', 'data',
           headers:
