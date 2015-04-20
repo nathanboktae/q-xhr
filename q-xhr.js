@@ -224,8 +224,8 @@
 
   Q.xhr.defaults = {
     transformResponse: [function(data, headers) {
-      if (typeof data === 'string' && (headers('content-type') || '').indexOf('json') >= 0) {
-        data = JSON.parse(data)
+      if (typeof data === 'string' && data.length && (headers('content-type') || '').indexOf('json') >= 0) {
+        data = JSON.parse(data);
       }
       return data
     }],
