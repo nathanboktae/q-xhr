@@ -79,20 +79,20 @@ module.exports = function(grunt) {
           concurrency: 3,
           browsers: [{
             browserName:"iphone",
-            platform: "OS X 10.8",
-            version: "6"
+            platform: "OS X 10.10",
+            version: "7.1"
           }, {
             browserName:"iphone",
-            platform: "OS X 10.6",
-            version: "5.0"
+            platform: "OS X 10.10",
+            version: "8.2"
           }, {
             browserName:"safari",
             platform: "OS X 10.8",
             version: "6"
           }, {
             browserName:"safari",
-            platform: "OS X 10.6",
-            version: "5"
+            platform: "OS X 10.10",
+            version: "8"
           }, {
             browserName:"android",
             platform: "Linux",
