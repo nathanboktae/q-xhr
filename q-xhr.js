@@ -189,6 +189,10 @@
         config.withCredentials = defaults.withCredentials
       }
 
+      if (config.watchUpload == null && defaults.watchUpload != null) {
+        config.watchUpload = defaults.watchUpload
+      }
+
       // send request
       return sendReq(config, reqData, headers).then(transformResponse, transformResponse)
     },
@@ -298,6 +302,13 @@
 
     xhr.onprogress = function (progress) {
       deferred.notify(progress)
+    }
+
+    if(config.watchUpload && xhr.upload) {
+      xhr.upload.onprogress = function (progress) {
+        progress.upload = true; // flag to differentiate from xhr.onprogress
+        deferred.notify(progress)
+      }
     }
 
     if (config.withCredentials) {
