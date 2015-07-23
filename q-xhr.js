@@ -297,7 +297,15 @@
     }
 
     xhr.onprogress = function (progress) {
+      progress.upload = false
       deferred.notify(progress)
+    }
+
+    if (xhr.upload) {
+      xhr.upload.onprogress = function (progress) {
+        progress.upload = true
+        deferred.notify(progress)
+      }
     }
 
     if (config.withCredentials) {

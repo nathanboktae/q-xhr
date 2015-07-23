@@ -89,16 +89,31 @@ describe 'q-xhr', ->
       inFlight: ->
         xhr.withCredentials.should.be.true
 
-  it 'should send progress notifications', (done) ->
+  it 'should send progress notifications during upload', (done) ->
     Q.xhr(
       url: '/foo'
     ).progress (prog) ->
-      prog.should.equal 'progress!'
+      prog.upload.should.equal true
+      prog.should.equal 'upload progress!'
       done()
 
     scenario
       inFlight: ->
-        xhr.onprogress('progress!')
+        xhr.upload.onprogress('upload progress!')
+    return
+
+
+  it 'should send progress notifications during download', (done) ->
+    Q.xhr(
+      url: '/foo'
+    ).progress (prog) ->
+      prog.upload.should.equal false
+      prog.should.equal 'download progress!'
+      done()
+
+    scenario
+      inFlight: ->
+        xhr.onprogress('download progress!')
     return
 
   describe 'params', ->
