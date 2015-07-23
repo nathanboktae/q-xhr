@@ -13,6 +13,7 @@ describe 'q-xhr', ->
     @abort = sinon.spy()
     @setRequestHeader = sinon.spy()
     @getAllResponseHeaders = sinon.spy -> @headers
+    @upload = {}
     throw new Error 'xhr not null' if xhr isnt null
     xhr = this
 
@@ -90,20 +91,17 @@ describe 'q-xhr', ->
         xhr.withCredentials.should.be.true
 
   it 'should send progress notifications during upload', (done) ->
-    if !window.XMLHttpRequestUpload
-      done()
-      return
-    
     Q.xhr(
       url: '/foo'
     ).progress (prog) ->
       prog.upload.should.equal true
-      prog.should.equal 'upload progress!'
+      prog.msg.should.equal 'upload progress!'
       done()
 
     scenario
       inFlight: ->
-        xhr.upload.onprogress('upload progress!')
+        xhr.upload.onprogress
+          msg: 'upload progress!'
     return
 
 
@@ -112,12 +110,13 @@ describe 'q-xhr', ->
       url: '/foo'
     ).progress (prog) ->
       prog.upload.should.equal false
-      prog.should.equal 'download progress!'
+      prog.msg.should.equal 'download progress!'
       done()
 
     scenario
       inFlight: ->
-        xhr.onprogress('download progress!')
+        xhr.onprogress
+          msg: 'download progress!'
     return
 
   describe 'params', ->
