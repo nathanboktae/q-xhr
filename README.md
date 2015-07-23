@@ -29,12 +29,6 @@ Post some JSON:
     console.log('success!')
   }, function(resp) {
     console.log('request failed with status' + resp.status)
-  }, function(progress) {
-    if (progress.upload) {
-      console.log('Uploaded: '+progress.loaded+' bytes')
-    } else {
-      console.log('Downloaded: '+progress.loaded+' bytes')
-    }
   })
 ```
 

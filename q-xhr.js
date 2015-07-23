@@ -189,6 +189,10 @@
         config.withCredentials = defaults.withCredentials
       }
 
+      if (config.watchUpload == null && defaults.watchUpload != null) {
+        config.watchUpload = defaults.watchUpload
+      }
+
       // send request
       return sendReq(config, reqData, headers).then(transformResponse, transformResponse)
     },
