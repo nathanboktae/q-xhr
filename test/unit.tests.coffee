@@ -90,6 +90,10 @@ describe 'q-xhr', ->
         xhr.withCredentials.should.be.true
 
   it 'should send progress notifications during upload', (done) ->
+    if !window.XMLHttpRequestUpload
+      done()
+      return
+    
     Q.xhr(
       url: '/foo'
     ).progress (prog) ->
