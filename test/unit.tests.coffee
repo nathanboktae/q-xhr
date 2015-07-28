@@ -691,4 +691,118 @@ describe 'q-xhr', ->
           throw new Error 'request should have not succeded'
         , (err) ->
           err.should.equal 'boom!'
- 
+
+  describe 'cache hooks', ->
+    cache = null
+    cacheObj = undefined
+    beforeEach ->
+      cacheObj = undefined
+      cache =
+        get: sinon.spy -> cacheObj
+        put: sinon.spy()
+
+    it 'should allow a cache to be configured', ->
+      Q.xhr.defaults.cache = cache
+
+      Q.xhr(
+        url: '/foo',
+        method: 'GET',
+        params:
+          baz: 4
+      ).then (resp) ->
+        cache.put.should.have.been.deep.calledWith '/foo?baz=4'
+        cache.put.firstCall.args[1].should.have.keys ['headers', 'data']
+        cache.put.firstCall.args[1].data.should.deep.equal
+          foo: 'bar'
+        resp.data.should.deep.equal
+          foo: 'bar'
+
+      scenario
+        inFlight: ->
+          cache.get.should.have.been.calledWith '/foo?baz=4'
+          xhr.responseText = '{"foo":"bar"}'
+          xhr.getAllResponseHeaders = -> 'content-type: application/json; charset=utf-8\n'
+          xhr.status = 200
+
+    it 'should not send a request if a value is cached and resolve the promise with it', ->
+      Q.xhr.defaults.cache = cache
+      cacheObj =
+        headers: -> {}
+        data: '{"foo":"bar"}'
+
+      Q.xhr(
+        url: '/foo',
+        method: 'GET',
+        params:
+          baz: 4
+      ).then (resp) ->
+        cache.put.should.have.not.been.called
+        resp.should.equal cacheObj        
+
+    it 'should prefer a request-specific cache over the default', ->
+      Q.xhr.defaults.cache = cache
+      cacheObj =
+        headers: -> {}
+        data: '{"foo":"bar"}'
+
+      localCache = 
+        get: (url) ->
+          headers: ->
+            'content-type': 'text/string'
+          data: 'local'
+
+      Q.xhr(
+        url: '/foo',
+        method: 'GET',
+        cache: localCache,
+        params:
+          baz: 5
+      ).then (resp) ->
+        cache.put.should.have.not.been.called
+        resp.headers()['content-type'].should.equal 'text/string'
+        resp.data.should.equal 'local'
+
+    it 'should chain request, requestReject, response and responseReject interceptors the same as when cached or not', ->
+      savedConfig = null
+      savedResponse = null
+      callCount = 0
+      Q.xhr.defaults.cache =
+        get: -> cacheObj
+        put: (u, c) ->
+          cacheObj = c
+
+      Q.xhr.interceptors = [
+        request: sinon.spy (config) ->
+          config.url += '/1'
+          savedConfig = config
+          Q.reject '/2'
+      ,
+        requestError: sinon.spy (err) -> 
+          Q.when savedConfig
+      ,
+        response: sinon.spy (resp) ->
+          savedResponse = resp
+          Q.reject 'boom!'
+      ,
+        responseError: sinon.spy (respErr) -> savedResponse
+      ]
+
+      Q.xhr.get('/books').then((resp) ->
+        resp.data.should.equal 'hi1'
+        Q.xhr.interceptors[0].request.should.have.been.calledBefore(Q.xhr.interceptors[1].requestError)
+        Q.xhr.interceptors[1].requestError.should.have.been.calledBefore(Q.xhr.interceptors[2].response)
+        Q.xhr.interceptors[2].response.should.have.been.calledBefore(Q.xhr.interceptors[3].responseError)
+        Q.xhr.interceptors[3].responseError.should.have.been.calledOnce
+      ).then ->
+        Q.xhr.get('/books').then (resp) ->
+          resp.data.should.equal 'hi1'
+          Q.xhr.interceptors[0].request.should.have.been.calledTwice.and.calledBefore(Q.xhr.interceptors[1].requestError)
+          Q.xhr.interceptors[1].requestError.should.have.been.calledTwice.and.calledBefore(Q.xhr.interceptors[2].response)
+          Q.xhr.interceptors[2].response.should.have.been.calledTwice.and.calledBefore(Q.xhr.interceptors[3].responseError)
+          Q.xhr.interceptors[3].responseError.should.have.been.calledTwice
+
+      scenario
+        inFlight: ->
+          xhr.open.should.have.been.calledWith 'GET', '/books/1'
+          xhr.responseText = 'hi' + (++callCount)
+

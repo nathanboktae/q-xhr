@@ -55,7 +55,7 @@ With modern web applications in mind, `application/json` is the default mime typ
 
 On the topic of MVC frameworks not needing jQuery, The [Angular] devs have adopted [Q] throught, and their [http service][$http] uses [Q]. q-xhr is a fork of that, with the following differences:
 
-- **No caching.** Caching is a [separate responsibility](http://blog.codinghorror.com/curlys-law-do-one-thing/) outside of doing ajax calls.
+- **No built-in caching.** Caching is a [separate responsibility](http://blog.codinghorror.com/curlys-law-do-one-thing/) outside of doing ajax calls. Hooks are provided to bring your own caching library or mechanism - see below.
 - **No JSONP.** JSONP has all sorts of security flaws and limitations and causes lots of burden on both client side and server side code. Given that [XDomainRequest is available for IE8 and 9](http://blogs.msdn.com/b/ieinternals/archive/2010/05/13/xdomainrequest-restrictions-limitations-and-workarounds.aspx), and IE6 and 7 [are dead](http://gs.statcounter.com/#desktop-browser_version_partially_combined-ww-monthly-201302-201402), it should be avoided IMO. If you want XDomainRequest support (which jQuery never did), let me know or submit a pull request!
 - **Interceptors are applied in order.** I guess [angular] had some backward compatibility they were tied to do so something funky by applying request handlers in reverse but response handlers in order, but I don't have backward compatibility issues so it works like you'd expect.
 - **The default JSON transform is only applied if the response content is `application/json`**. [Angular] was doing something odd by sniffing all content via regex matching and then converting it to JSON if it matched. Why? Geez people set your `Content-Type` correctly already. Not to mention content sniffing leads to [security issues](http://blogs.msdn.com/b/ie/archive/2008/09/02/ie8-security-part-vi-beta-2-update.aspx).
@@ -103,6 +103,25 @@ require(['q-xhr'], function(Q) {
   Q.xhr.get('https://api.github.com/users/nathanboktae/events').then(.....)
 </script>
 ```
+
+#### Cache Hooks
+
+A cache object can be provided either as defaults on `Q.xhr.defaults` or per-request (with the per-request object preferred). The object must have a `get` function that returns the response object for a url, and a `put` function given the url and response object to save it. The most trival implementation would be this:
+
+```javascript
+var cache = {}
+Q.xhr.defaults.cache = {
+  get: function(url) {
+    return cache[url]
+  },
+  put: function(url, response) {
+    cache[url] = response
+  }
+}
+```
+
+Unlike `$http`, `q-xhr` will not put pending requests in the cache - only successful responses, and before transforms are applied (they will be re-applied each retrieval).
+
 
 [Q]: https://github.com/kriskowal/q
 [Angular]: http://angularjs.org/

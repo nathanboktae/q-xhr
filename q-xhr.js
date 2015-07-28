@@ -189,8 +189,22 @@
         config.withCredentials = defaults.withCredentials
       }
 
-      // send request
-      return sendReq(config, reqData, headers).then(transformResponse, transformResponse)
+      var url = buildUrl(config.url, config.params),
+          cache = config.cache || defaults.cache
+
+      if (cache) {
+        var cachedResp = cache.get(url)
+        if (cachedResp !== undefined) {
+          return Q.when(cachedResp)
+        }
+
+        return sendReq(url, config, reqData).then(transformResponse, transformResponse).then(function(resp) {
+          cache.put(url, resp)
+          return resp
+        })
+      } else {
+        return sendReq(url, config, reqData).then(transformResponse, transformResponse)
+      }
     },
 
     transformResponse = function(response) {
@@ -242,18 +256,17 @@
       post:   contentTypeJson,
       put:    contentTypeJson,
       patch:  contentTypeJson
-    },
+    }
   }
 
   Q.xhr.interceptors = []
   Q.xhr.pendingRequests = []
 
-  function sendReq(config, reqData, reqHeaders) {
+  function sendReq(url, config, reqData) {
     var deferred = Q.defer(),
         promise = deferred.promise,
-        url = buildUrl(config.url, config.params),
-        xhr = new XHR(),
         aborted = -1,
+        xhr = new XHR(),
         status,
         timeoutId
 
