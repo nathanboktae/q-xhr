@@ -3,7 +3,7 @@
 
 [![Build Status](https://secure.travis-ci.org/nathanboktae/q-xhr.png?branch=master)](https://travis-ci.org/nathanboktae/q-xhr)
 
-[![SauceLabs Test Status](https://saucelabs.com/browser-matrix/nathanboktae.svg)](https://saucelabs.com/u/nathanboktae)
+[![SauceLabs Test Status](https://saucelabs.com/browser-matrix/q-xhr.svg)](https://saucelabs.com/u/nathanboktae)
 
 ### Why q-xhr and not $.ajax?
 
