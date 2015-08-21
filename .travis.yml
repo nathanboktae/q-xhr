@@ -1,10 +1,9 @@
 language: node_js
+sudo: false
 node_js:
-  - 0.10
-
+- 0.12
 env:
   global:
-  - SAUCE_USERNAME=nathanboktae
-  - secure: AqDqBanZz9tG5HsYyCPlpH2/RzHlMW4LQFVijfDpduPz7UXrZ4EqygPqfqI2WAgsee7Ce3TXZJ1S28JzUH8L70ELH7ruoy80umW12qNXaEt4SXBeuTlpTuEDfYurLN8DEHh3zmCh8136EwxhT4RaOWuA/R1PpbrymBygbPRLJMU=
-
+  - SAUCE_USERNAME=q-xhr
+  - secure: nACKS+/iIUWNlOYfTgXbYhFFObbtSPSOPcLH2S9U/14YbDx860neUP7+D+2hYRYvLwsWqsSXgtHo1TcDwv0G/ColJa+YcuqVxjUfc3cN3+XTT+XSv4AAcQ2v1NDrx0WEVM7JoLQEMRa+sa7EVbCnagtVvVkpiS9VhKC8ce1eFAs=
 script: npm test

@@ -38,17 +38,5 @@
   },
   "scripts": {
     "test": "./node_modules/mocha/bin/mocha -R spec && (grunt test || true)"
-  },
-  "testling": {
-    "harness": "mocha-bdd",
-    "files": "test/browser.tests.js",
-    "browsers": [
-      "ie/10",
-      "chrome/latest",
-      "firefox/latest",
-      "iphone/latest",
-      "ipad/latest",
-      "android-browser/latest"
-    ]
   }
 }
