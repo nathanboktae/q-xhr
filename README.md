@@ -1,5 +1,7 @@
 ## q-xhr: Do ajax with powerful [Q] promises
-### [Angular's $http service][$http] for us all
+### Deprecation Notice
+
+In 2014, [Q] was an amazing library pushing promises and helping us all do asyncronous programming better. Now however that `Promise` is part of ES6, and widely available natively in modern browsers and Node.js, and that [Q] has a vastly different API, we should just use the standard `Promise` library. [Axios](https://github.com/mzabriskie/axios) does that using the same API inspired from [Angular's $http](http://docs.angularjs.org/api/ng/service/$http), so I encorage you to migrate to that library. It's great.
 
 [![Build Status](https://secure.travis-ci.org/nathanboktae/q-xhr.png?branch=master)](https://travis-ci.org/nathanboktae/q-xhr)
 
