@@ -314,7 +314,7 @@
       deferred.notify(progress)
     }
 
-    if (xhr.upload) {
+    if (xhr.upload && !config.disableUploadProgress) {
       xhr.upload.onprogress = function (progress) {
         progress.upload = true
         deferred.notify(progress)

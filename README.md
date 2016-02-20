@@ -35,9 +35,9 @@ Post some JSON:
 Listen to progress:
 
 ```javascript
-  
+
   var someLargeData = getSomeLargeData();
-  
+
   Q.xhr.post('/processLargeData', someLargeData).progress(function(progress) {
     if (progress.upload) {
       console.log('Uploaded: '+progress.loaded+' bytes')
@@ -121,6 +121,10 @@ Q.xhr.defaults.cache = {
 ```
 
 Unlike `$http`, `q-xhr` will not put pending requests in the cache - only successful responses, and before transforms are applied (they will be re-applied each retrieval).
+
+#### Upload Progress
+
+Assigning a handler to `xhr.upload.onprogress` in Chrome causes it to issue a preflight request which requires additional handling on the part of the server. If you don't track upload progress and want to avoid this incompatibility, add option `disableUploadProgress: true` to your q-xhr options.
 
 
 [Q]: https://github.com/kriskowal/q
